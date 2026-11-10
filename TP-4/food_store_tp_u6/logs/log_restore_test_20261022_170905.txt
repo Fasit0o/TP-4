@@ -1,0 +1,30 @@
+﻿SIMULACRO DE RESTAURACION - FOOD STORE | U6
+Base origen        : foodstore_dev
+Base destino       : foodstore_restore_test
+Respaldo utilizado : C:\Users\aguss\OneDrive\Escritorio\Programación\BD II\4. Unidad 4\Unidad4_TP6\food_store_tp_u6\backups\foodstore_dev_20261022_163801.dump
+Fecha del respaldo : 2026-10-22 16:38:02 -03:00
+RPO calculado con la fecha de modificacion local del archivo.
+SHA-256 verificado : 12E92B05677DBD0E194B2EB60BFD45620C4C0E7D89293F8659ECCB75FBF5C010
+pg_restore exit code: 0
+Validacion pg_restore --list: OK
+psql exit code: 0
+Se reemplazara unicamente la base descartable 'foodstore_restore_test' (-Recreate).
+dropdb exit code: 0
+createdb exit code: 0
+pg_restore exit code: 0
+CONTEO|categoria|9|9|OK
+CONTEO|cliente|20000|20000|OK
+CONTEO|detalle_pedido|306700|306700|OK
+CONTEO|pedido|203000|203000|OK
+CONTEO|producto|50000|50000|OK
+CONTROL|detalles_invalidos|0|0|OK
+CONTROL|productos_invalidos|0|0|OK
+psql exit code: 0
+Inicio de restauracion : 2026-10-22 17:09:06 -03:00
+Fin de validaciones    : 2026-10-22 17:09:10 -03:00
+RTO observado          : 00:00:03.9510021
+RPO al iniciar         : 00:31:04.1460016
+Validaciones            : OK
+dropdb exit code: 0
+Base descartable 'foodstore_restore_test' eliminada tras validar.
+Resultado              : OK

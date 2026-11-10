@@ -1,0 +1,42 @@
+﻿============================================================
+REVISION DE MANTENIMIENTO - FOOD STORE | UNIDAD 6
+============================================================
+     base      |     rol     |          fecha_hora           
+---------------+-------------+-------------------------------
+ foodstore_dev | admin_datos | 2026-10-22 16:40:08.721103-03
+(1 row)
+
+
+--- CONFIGURACION DE AUTOVACUUM ---
+              name               | setting | unit 
+---------------------------------+---------+------
+ autovacuum                      | on      | 
+ autovacuum_analyze_scale_factor | 0.1     | 
+ autovacuum_analyze_threshold    | 50      | 
+ autovacuum_vacuum_scale_factor  | 0.2     | 
+ autovacuum_vacuum_threshold     | 50      | 
+(5 rows)
+
+
+--- ESTADO Y UMBRAL ANTES DEL ANALYZE ---
+SELECT 3
+ esquema |     tabla      | filas_estimadas | tuplas_muertas_estimadas | modificaciones_desde_analyze | umbral_autoanalyze | requiere_analyze |        last_autovacuum        | last_autoanalyze | last_vacuum |         last_analyze          
+---------+----------------+-----------------+--------------------------+------------------------------+--------------------+------------------+-------------------------------+------------------+-------------+-------------------------------
+ public  | detalle_pedido |          306700 |                        0 |                            0 |              30720 | f                | 2026-10-12 18:35:15.522754-03 |                  |             | 2026-10-22 15:31:13.877722-03
+ public  | pedido         |          203000 |                        0 |                            0 |              20350 | f                | 2026-10-12 18:35:15.181499-03 |                  |             | 2026-10-22 15:31:13.822368-03
+ public  | producto       |           50000 |                        1 |                            0 |               5050 | f                | 2026-10-12 18:35:14.882479-03 |                  |             | 2026-10-22 15:31:14.303607-03
+(3 rows)
+
+
+No se ejecuta ANALYZE: ninguna tabla alcanzo su umbral de autoanalyze.
+
+--- ESTADO DESPUES DE LA REVISION ---
+ esquema |     tabla      | filas_estimadas | tuplas_muertas_estimadas | modificaciones_desde_analyze |        last_autovacuum        | last_autoanalyze | last_vacuum |         last_analyze          
+---------+----------------+-----------------+--------------------------+------------------------------+-------------------------------+------------------+-------------+-------------------------------
+ public  | detalle_pedido |          306700 |                        0 |                            0 | 2026-10-12 18:35:15.522754-03 |                  |             | 2026-10-22 15:31:13.877722-03
+ public  | pedido         |          203000 |                        0 |                            0 | 2026-10-12 18:35:15.181499-03 |                  |             | 2026-10-22 15:31:13.822368-03
+ public  | producto       |           50000 |                        1 |                            0 | 2026-10-12 18:35:14.882479-03 |                  |             | 2026-10-22 15:31:14.303607-03
+(3 rows)
+
+
+Fin de la revision. No se ejecuta VACUUM FULL ni VACUUM manual.

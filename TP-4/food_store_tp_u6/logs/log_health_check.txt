@@ -1,0 +1,49 @@
+﻿============================================================
+CHEQUEO DE SALUD - FOOD STORE | UNIDAD 6
+============================================================
+     base      |     rol     |          fecha_hora           
+---------------+-------------+-------------------------------
+ foodstore_dev | admin_datos | 2026-10-22 12:20:20.999241-03
+(1 row)
+
+
+--- 1. TAMANO DE LA BASE ---
+ tamano_base 
+-------------
+ 75 MB
+(1 row)
+
+
+--- 2. ACTIVIDAD DE CONEXIONES ---
+ conexiones_actuales | transacciones_confirmadas | transacciones_revertidas | estadisticas_reiniciadas 
+---------------------+---------------------------+--------------------------+--------------------------
+                   1 |                     36018 |                      165 | 
+(1 row)
+
+
+--- 3. ESTADO DE TABLAS ---
+ esquema |            tabla             | filas_estimadas | tuplas_muertas_estimadas |        last_autovacuum        |       last_autoanalyze        | last_vacuum |         last_analyze          
+---------+------------------------------+-----------------+--------------------------+-------------------------------+-------------------------------+-------------+-------------------------------
+ public  | control_lote_almacen         |               8 |                       15 |                               |                               |             | 
+ public  | cliente                      |           20000 |                        6 | 2026-10-12 18:35:14.944711-03 |                               |             | 2026-10-12 18:34:54.542462-03
+ public  | producto                     |           50000 |                        1 | 2026-10-12 18:35:14.882479-03 |                               |             | 2026-10-12 18:34:54.13927-03
+ public  | categoria                    |               9 |                        0 |                               |                               |             | 
+ public  | cliente_anon                 |           20000 |                        0 | 2026-10-13 15:29:46.111143-03 | 2026-10-13 15:29:46.492013-03 |             | 
+ public  | control_lote_responsable     |               3 |                        0 |                               |                               |             | 
+ public  | deposito                     |               7 |                        0 |                               |                               |             | 
+ public  | detalle_pedido               |          306700 |                        0 | 2026-10-12 18:35:15.522754-03 |                               |             | 2026-10-12 18:34:54.918219-03
+ public  | lote                         |               8 |                        0 |                               |                               |             | 
+ public  | mv_facturacion_categoria_mes |              36 |                        0 |                               |                               |             | 
+ public  | pedido                       |          203000 |                        0 | 2026-10-12 18:35:15.181499-03 |                               |             | 2026-10-12 18:34:54.869689-03
+ public  | responsable_control          |               7 |                        0 |                               |                               |             | 
+ public  | responsable_deposito         |               2 |                        0 |                               |                               |             | 
+(13 rows)
+
+
+--- 4. CONSULTAS ACTIVAS ---
+ pid | usuario | estado | duracion | wait_event_type | wait_event | bloqueado_por | query 
+-----+---------+--------+----------+-----------------+------------+---------------+-------
+(0 rows)
+
+
+Fin del chequeo. Las filas y tuplas de pg_stat_user_tables son estimaciones.

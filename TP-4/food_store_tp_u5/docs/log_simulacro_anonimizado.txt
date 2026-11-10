@@ -1,0 +1,79 @@
+========================================================================
+LOG ANONIMIZADO — Simulacro de Incidente  |  Food Store  |  [FECHA]
+========================================================================
+Anonimización aplicada:
+  - Nombre real "Victoria Suarez"   → "usuario_victima_01"
+  - Email real "vsuarez@..."        → "victima01@anon.local"
+  - Teléfono real                   → "[TELEFONO_ANONIMIZADO]"
+  - Dirección real                  → "[DIRECCION_ANONIMIZADA]"
+  - Contraseña de prueba omitida    → "[PASS_OMITIDA]"
+  - Timestamps ajustados a UTC+0    → [HH:MM:SS] (hora relativa)
+  - PID y puerto de origen          → [PID] y [PORT]
+========================================================================
+
+-- Sesión [PID=A] | usuario=postgres | bd=foodstore_dev | origen=localhost
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] LOG: conexión autorizada
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] LOG: sentencia:
+    INSERT INTO cliente (nombre, email, telefono, direccion)
+    VALUES ('usuario_victima_01', 'victima01@anon.local',
+            '[TELEFONO_ANONIMIZADO]', '[DIRECCION_ANONIMIZADA]')
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] LOG: sentencia:
+    SELECT fn_resetear_password(
+        (SELECT id_cliente FROM cliente WHERE email = 'victima01@anon.local'),
+        '[PASS_OMITIDA]'
+    );
+
+-- FASE 1: Tres intentos fallidos de autenticación (fuerza bruta)
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] ERROR: no existe la columna c.contrasena_hash
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] CONTEXTO: función PL/pgSQL fn_autenticar(text,text) línea 7
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] SENTENCIA:
+    SELECT fn_autenticar('victima01@anon.local', '[PASS_OMITIDA]') AS resultado;
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] ERROR: no existe la columna c.contrasena_hash
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] CONTEXTO: función PL/pgSQL fn_autenticar(text,text) línea 7
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] SENTENCIA:
+    SELECT fn_autenticar('victima01@anon.local', '[PASS_OMITIDA]') AS resultado;
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] ERROR: no existe la columna c.contrasena_hash
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] CONTEXTO: función PL/pgSQL fn_autenticar(text,text) línea 7
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] SENTENCIA:
+    SELECT fn_autenticar('victima01@anon.local', '[PASS_OMITIDA]') AS resultado;
+
+-- FASE 2: Autenticación exitosa (4to intento)
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] ERROR: no existe la columna c.contrasena_hash
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] CONTEXTO: función PL/pgSQL fn_autenticar(text,text) línea 7
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] SENTENCIA:
+    SELECT fn_autenticar('victima01@anon.local', '[PASS_OMITIDA]') AS resultado;
+
+-- NOTA: fn_autenticar retorna el id_cliente en el resultado pero
+-- el log no registra el valor devuelto, solo la sentencia ejecutada.
+
+-- FASE 3: Lectura masiva (no registrada por log_statement='mod')
+-- El SELECT sobre la tabla cliente no aparece en este fragmento.
+
+-- FASE 4: Intento de escalamiento de privilegios
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] LOG: sentencia:
+    GRANT admin_datos TO rol_soporte;
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] ERROR:
+    se ha denegado el permiso para otorgar el rol «admin_datos»
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] DETALLE:
+    Solo los roles con la opción ADMIN en el rol «admin_datos» pueden otorgar este rol.
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] SENTENCIA:
+    GRANT admin_datos TO rol_soporte;
+
+-- Limpieza
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] LOG: sentencia:
+    DELETE FROM cliente WHERE email = 'victima01@anon.local';
+
+[T+00:00] [A] postgres@foodstore_dev localhost:[PORT] LOG:
+    desconexión: duración de sesión: 0:00:00.040
+
+========================================================================

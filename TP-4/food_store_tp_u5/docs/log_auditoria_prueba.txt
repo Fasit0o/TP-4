@@ -1,0 +1,76 @@
+========================================================================
+LOG DE AUDITORÍA — Prueba Parte B  |  Food Store  |  2026-10-13
+========================================================================
+Fragmento extraído de: C:/Program Files/PostgreSQL/17/data/log/
+Parámetros activos: log_connections=on, log_disconnections=on,
+                    log_statement=mod, log_line_prefix='%t [%p] %u@%d %r'
+========================================================================
+
+------------------------------------------------------------------------
+-- INTENTO 1: app_web ejecuta auditoria_test.sql
+-- Resultado: conexión exitosa, pero permisos denegados sobre 'cliente'
+-- (demuestra que el modelo de mínimo privilegio funciona correctamente)
+------------------------------------------------------------------------
+
+2026-10-13 14:59:47 -03 [28320] [desconocido]@[desconocido] ::1(55828) LOG:  conexión recibida: host=::1 port=55828
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) LOG:  conexión autenticada: identidad=«app_web» método=scram-sha-256
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) LOG:  conexión autorizada: usuario=app_web base_de_datos=foodstore_dev nombre_de_aplicación=psql
+
+-- INSERT intentado por app_web: registrado + error de permiso
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) LOG:  sentencia: INSERT INTO cliente (nombre, email, telefono, direccion)
+    VALUES ('Cliente Prueba Auditoria', 'auditoria@test.com', '1100000000', 'Calle Falsa 123');
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) ERROR:  permiso denegado a la tabla cliente
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) SENTENCIA:  INSERT INTO cliente ...
+
+-- UPDATE intentado por app_web: registrado + error de permiso
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) LOG:  sentencia: UPDATE cliente
+    SET    telefono = '1199999999'
+    WHERE  email = 'auditoria@test.com';
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) ERROR:  permiso denegado a la tabla cliente
+
+-- DELETE intentado por app_web: registrado + error de permiso
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) LOG:  sentencia: DELETE FROM cliente
+    WHERE  email = 'auditoria@test.com';
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) ERROR:  permiso denegado a la tabla cliente
+
+2026-10-13 14:59:47 -03 [28320] app_web@foodstore_dev ::1(55828) LOG:  desconexión: duración de sesión: 0:00:00.034 usuario=app_web base=foodstore_dev host=::1 port=55828
+
+------------------------------------------------------------------------
+-- INTENTO 2: postgres ejecuta auditoria_test.sql
+-- Resultado: INSERT, UPDATE y DELETE ejecutados con éxito
+-- Nota: el SELECT NO aparece en el log (log_statement='mod' no lo captura)
+------------------------------------------------------------------------
+
+2026-10-13 14:59:54 -03 [25724] [desconocido]@[desconocido] ::1(55833) LOG:  conexión recibida: host=::1 port=55833
+2026-10-13 14:59:54 -03 [25724] postgres@foodstore_dev ::1(55833) LOG:  conexión autenticada: identidad=«postgres» método=scram-sha-256
+2026-10-13 14:59:54 -03 [25724] postgres@foodstore_dev ::1(55833) LOG:  conexión autorizada: usuario=postgres base_de_datos=foodstore_dev nombre_de_aplicación=psql
+
+-- INSERT exitoso: queda registrado con texto completo de la sentencia
+2026-10-13 14:59:54 -03 [25724] postgres@foodstore_dev ::1(55833) LOG:  sentencia: INSERT INTO cliente (nombre, email, telefono, direccion)
+    VALUES ('Cliente Prueba Auditoria', 'auditoria@test.com', '1100000000', 'Calle Falsa 123');
+
+-- UPDATE exitoso
+2026-10-13 14:59:54 -03 [25724] postgres@foodstore_dev ::1(55833) LOG:  sentencia: UPDATE cliente
+    SET    telefono = '1199999999'
+    WHERE  email = 'auditoria@test.com';
+
+-- DELETE exitoso (limpieza del dato de prueba)
+2026-10-13 14:59:54 -03 [25724] postgres@foodstore_dev ::1(55833) LOG:  sentencia: DELETE FROM cliente
+    WHERE  email = 'auditoria@test.com';
+
+2026-10-13 14:59:54 -03 [25724] postgres@foodstore_dev ::1(55833) LOG:  desconexión: duración de sesión: 0:00:00.071 usuario=postgres base=foodstore_dev host=::1 port=55833
+
+------------------------------------------------------------------------
+-- INTENTO 3: Login fallido de app_web con contraseña incorrecta
+-- Queda registrado como FATAL con método de autenticación y regla pg_hba
+------------------------------------------------------------------------
+
+2026-10-13 14:59:58 -03 [32008] [desconocido]@[desconocido] ::1(55839) LOG:  conexión recibida: host=::1 port=55839
+2026-10-13 14:59:58 -03 [32008] app_web@foodstore_dev ::1(55839) FATAL:  la autentificación password falló para el usuario «app_web»
+2026-10-13 14:59:58 -03 [32008] app_web@foodstore_dev ::1(55839) DETALLE:  La conexión coincidió con la línea 117 de pg_hba.conf: «host all all ::1/128 scram-sha-256»
+
+========================================================================
+LECTURA: el SELECT de la prueba NO aparece en este log.
+Con log_statement='mod' solo se registran sentencias de modificación.
+Para auditar lecturas se requiere log_statement='all' o la extensión pgaudit.
+========================================================================

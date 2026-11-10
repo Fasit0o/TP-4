@@ -1,0 +1,13 @@
+﻿LOG DE BACKUP - FOOD STORE | U6
+Inicio       : 2026-10-22 16:38:01 -03:00
+Fin          : 2026-10-22 16:38:02 -03:00
+Base         : foodstore_dev
+Servidor     : localhost:5432
+Rol          : admin_datos
+Archivo      : C:\Users\aguss\OneDrive\Escritorio\Programación\BD II\4. Unidad 4\Unidad4_TP6\food_store_tp_u6\backups\foodstore_dev_20261022_163801.dump
+Tamano bytes : 5710763
+pg_dump      : 0
+pg_restore   : 0
+SHA-256      : 12E92B05677DBD0E194B2EB60BFD45620C4C0E7D89293F8659ECCB75FBF5C010 *foodstore_dev_20261022_163801.dump
+Resultado    : OK
+Validacion pg_restore --list: OK

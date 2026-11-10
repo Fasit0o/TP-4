@@ -1,0 +1,520 @@
+﻿============================================================
+CHEQUEO PRE-TRABAJO ÔÇö FOOD STORE
+============================================================
+
+--- [0] CONEXI├ôN ACTUAL (comparar con la base objetivo del backup) ---
+     base      |     rol     | servidor | puerto | es_replica 
+---------------+-------------+----------+--------+------------
+ foodstore_dev | admin_datos | ::1      |   5432 | f
+(1 row)
+
+
+--- [1] TABLAS PRESENTES EN EL ESQUEMA PUBLIC ---
+        table_name        | table_type 
+--------------------------+------------
+ categoria                | BASE TABLE
+ cliente                  | BASE TABLE
+ cliente_anon             | BASE TABLE
+ control_lote_almacen     | BASE TABLE
+ control_lote_responsable | BASE TABLE
+ deposito                 | BASE TABLE
+ detalle_pedido           | BASE TABLE
+ lote                     | BASE TABLE
+ pedido                   | BASE TABLE
+ producto                 | BASE TABLE
+ responsable_control      | BASE TABLE
+ responsable_deposito     | BASE TABLE
+(12 rows)
+
+
+--- [1b] TIPO ENUM forma_pago_enum ---
+   enum_nombre   |     valor     
+-----------------+---------------
+ forma_pago_enum | EFECTIVO
+ forma_pago_enum | TARJETA
+ forma_pago_enum | TRANSFERENCIA
+(3 rows)
+
+
+--- [2] DEFINICI├ôN DE COLUMNAS POR TABLA ---
+   table_name   |        column_name        |        data_type         | is_nullable | column_default 
+----------------+---------------------------+--------------------------+-------------+----------------
+ categoria      | id_categoria              | bigint                   | NO          | 
+ categoria      | nombre                    | character varying        | NO          | 
+ categoria      | activo                    | boolean                  | NO          | true
+ cliente        | id_cliente                | bigint                   | NO          | 
+ cliente        | email                     | character varying        | NO          | 
+ cliente        | nombre                    | character varying        | NO          | 
+ cliente        | telefono                  | character varying        | YES         | 
+ cliente        | direccion                 | character varying        | NO          | 
+ cliente        | contrasena_hash           | text                     | YES         | 
+ detalle_pedido | id_pedido                 | bigint                   | NO          | 
+ detalle_pedido | id_producto               | bigint                   | NO          | 
+ detalle_pedido | cantidad                  | integer                  | NO          | 
+ detalle_pedido | precio_unitario_historico | numeric                  | NO          | 
+ pedido         | id_pedido                 | bigint                   | NO          | 
+ pedido         | fecha_hora                | timestamp with time zone | NO          | now()
+ pedido         | forma_pago                | USER-DEFINED             | NO          | 
+ pedido         | id_cliente                | bigint                   | NO          | 
+ producto       | id_producto               | bigint                   | NO          | 
+ producto       | nombre                    | character varying        | NO          | 
+ producto       | descripcion               | text                     | YES         | 
+ producto       | precio_lista              | numeric                  | NO          | 
+ producto       | stock                     | integer                  | NO          | 0
+ producto       | activo                    | boolean                  | NO          | true
+ producto       | id_categoria              | bigint                   | NO          | 
+(24 rows)
+
+
+--- [3] CLAVES PRIMARIAS ---
+        table_name        |      column_name       |        constraint_name        
+--------------------------+------------------------+-------------------------------
+ categoria                | id_categoria           | categoria_pkey
+ cliente                  | id_cliente             | cliente_pkey
+ cliente_anon             | id_cliente             | pk_cliente_anon
+ control_lote_almacen     | lote_id                | control_lote_almacen_pkey
+ control_lote_almacen     | deposito_id            | control_lote_almacen_pkey
+ control_lote_responsable | lote_id                | control_lote_responsable_pkey
+ control_lote_responsable | responsable_control_id | control_lote_responsable_pkey
+ deposito                 | id                     | deposito_pkey
+ detalle_pedido           | id_pedido              | pk_detalle_pedido
+ detalle_pedido           | id_producto            | pk_detalle_pedido
+ lote                     | id                     | lote_pkey
+ pedido                   | id_pedido              | pedido_pkey
+ producto                 | id_producto            | producto_pkey
+ responsable_control      | id                     | responsable_control_pkey
+ responsable_deposito     | responsable_control_id | responsable_deposito_pkey
+(15 rows)
+
+
+--- [4] CLAVES FOR├üNEAS (incluye estado de validaci├│n) ---
+        tabla_hija        |                        nombre                        |     tabla_padre      |                                          definicion                                          | on_delete | validada 
+--------------------------+------------------------------------------------------+----------------------+----------------------------------------------------------------------------------------------+-----------+----------
+ control_lote_almacen     | control_lote_almacen_deposito_id_fkey                | deposito             | FOREIGN KEY (deposito_id) REFERENCES deposito(id)                                            | NO ACTION | t
+ control_lote_almacen     | control_lote_almacen_lote_id_fkey                    | lote                 | FOREIGN KEY (lote_id) REFERENCES lote(id)                                                    | NO ACTION | t
+ control_lote_almacen     | control_lote_almacen_responsable_control_id_fkey     | responsable_control  | FOREIGN KEY (responsable_control_id) REFERENCES responsable_control(id)                      | NO ACTION | t
+ control_lote_responsable | control_lote_responsable_lote_id_fkey                | lote                 | FOREIGN KEY (lote_id) REFERENCES lote(id)                                                    | NO ACTION | t
+ control_lote_responsable | control_lote_responsable_responsable_control_id_fkey | responsable_deposito | FOREIGN KEY (responsable_control_id) REFERENCES responsable_deposito(responsable_control_id) | NO ACTION | t
+ detalle_pedido           | fk_detalle_pedido                                    | pedido               | FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido) ON DELETE RESTRICT                      | RESTRICT  | t
+ detalle_pedido           | fk_detalle_producto                                  | producto             | FOREIGN KEY (id_producto) REFERENCES producto(id_producto) ON DELETE RESTRICT                | RESTRICT  | t
+ pedido                   | fk_pedido_cliente                                    | cliente              | FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE RESTRICT                   | RESTRICT  | t
+ producto                 | fk_producto_categoria                                | categoria            | FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria) ON DELETE RESTRICT             | RESTRICT  | t
+ responsable_deposito     | responsable_deposito_deposito_id_fkey                | deposito             | FOREIGN KEY (deposito_id) REFERENCES deposito(id)                                            | NO ACTION | t
+ responsable_deposito     | responsable_deposito_responsable_control_id_fkey     | responsable_control  | FOREIGN KEY (responsable_control_id) REFERENCES responsable_control(id)                      | NO ACTION | t
+(11 rows)
+
+
+--- [5] RESTRICCIONES CHECK ---
+        table_name        |    constraint_name     |                    check_clause                     
+--------------------------+------------------------+-----------------------------------------------------
+ categoria                | 2200_69176_1_not_null  | id_categoria IS NOT NULL
+ categoria                | 2200_69176_2_not_null  | nombre IS NOT NULL
+ categoria                | 2200_69176_3_not_null  | activo IS NOT NULL
+ cliente                  | 2200_69204_1_not_null  | id_cliente IS NOT NULL
+ cliente                  | 2200_69204_2_not_null  | email IS NOT NULL
+ cliente                  | 2200_69204_3_not_null  | nombre IS NOT NULL
+ cliente                  | 2200_69204_5_not_null  | direccion IS NOT NULL
+ cliente_anon             | 2200_69427_1_not_null  | id_cliente IS NOT NULL
+ control_lote_almacen     | 2200_68653_1_not_null  | lote_id IS NOT NULL
+ control_lote_almacen     | 2200_68653_2_not_null  | deposito_id IS NOT NULL
+ control_lote_almacen     | 2200_68653_3_not_null  | responsable_control_id IS NOT NULL
+ control_lote_responsable | 2200_68688_1_not_null  | lote_id IS NOT NULL
+ control_lote_responsable | 2200_68688_2_not_null  | responsable_control_id IS NOT NULL
+ deposito                 | 2200_68629_1_not_null  | id IS NOT NULL
+ deposito                 | 2200_68629_2_not_null  | nombre IS NOT NULL
+ deposito                 | 2200_68629_3_not_null  | ubicacion IS NOT NULL
+ deposito                 | 2200_68629_4_not_null  | capacidad IS NOT NULL
+ deposito                 | chk_deposito_capacidad | (capacidad > 0)
+ detalle_pedido           | 2200_69225_1_not_null  | id_pedido IS NOT NULL
+ detalle_pedido           | 2200_69225_2_not_null  | id_producto IS NOT NULL
+ detalle_pedido           | 2200_69225_3_not_null  | cantidad IS NOT NULL
+ detalle_pedido           | 2200_69225_4_not_null  | precio_unitario_historico IS NOT NULL
+ detalle_pedido           | chk_detalle_cantidad   | (cantidad > 0)
+ detalle_pedido           | chk_detalle_precio     | (precio_unitario_historico >= (0)::numeric)
+ lote                     | 2200_68635_1_not_null  | id IS NOT NULL
+ lote                     | 2200_68635_2_not_null  | codigo_producto IS NOT NULL
+ lote                     | 2200_68635_3_not_null  | fecha_vencimiento IS NOT NULL
+ lote                     | chk_lote_vencimiento   | (fecha_vencimiento >= CURRENT_DATE)
+ pedido                   | 2200_69214_1_not_null  | id_pedido IS NOT NULL
+ pedido                   | 2200_69214_2_not_null  | fecha_hora IS NOT NULL
+ pedido                   | 2200_69214_3_not_null  | forma_pago IS NOT NULL
+ pedido                   | 2200_69214_4_not_null  | id_cliente IS NOT NULL
+ producto                 | 2200_69185_1_not_null  | id_producto IS NOT NULL
+ producto                 | 2200_69185_2_not_null  | nombre IS NOT NULL
+ producto                 | 2200_69185_4_not_null  | precio_lista IS NOT NULL
+ producto                 | 2200_69185_5_not_null  | stock IS NOT NULL
+ producto                 | 2200_69185_6_not_null  | activo IS NOT NULL
+ producto                 | 2200_69185_7_not_null  | id_categoria IS NOT NULL
+ producto                 | chk_producto_precio    | (precio_lista >= (0)::numeric)
+ producto                 | chk_producto_stock     | (stock >= 0)
+ responsable_control      | 2200_68643_1_not_null  | id IS NOT NULL
+ responsable_control      | 2200_68643_2_not_null  | dni IS NOT NULL
+ responsable_control      | 2200_68643_3_not_null  | mail IS NOT NULL
+ responsable_control      | 2200_68643_4_not_null  | nombre_completo IS NOT NULL
+ responsable_control      | chk_responsable_mail   | ((mail)::text ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$'::text)
+ responsable_deposito     | 2200_68673_1_not_null  | responsable_control_id IS NOT NULL
+ responsable_deposito     | 2200_68673_2_not_null  | deposito_id IS NOT NULL
+(47 rows)
+
+
+--- [6] ├ìNDICES DEL ESQUEMA Y ESTADO DE VALIDEZ ---
+ esquema |            tabla             |            indice             |                                                             definicion                                                             | valido | listo_para_escrituras | activo 
+---------+------------------------------+-------------------------------+------------------------------------------------------------------------------------------------------------------------------------+--------+-----------------------+--------
+ public  | categoria                    | categoria_nombre_key          | CREATE UNIQUE INDEX categoria_nombre_key ON public.categoria USING btree (nombre)                                                  | t      | t                     | t
+ public  | categoria                    | categoria_pkey                | CREATE UNIQUE INDEX categoria_pkey ON public.categoria USING btree (id_categoria)                                                  | t      | t                     | t
+ public  | cliente                      | cliente_email_key             | CREATE UNIQUE INDEX cliente_email_key ON public.cliente USING btree (email)                                                        | t      | t                     | t
+ public  | cliente                      | cliente_pkey                  | CREATE UNIQUE INDEX cliente_pkey ON public.cliente USING btree (id_cliente)                                                        | t      | t                     | t
+ public  | cliente_anon                 | pk_cliente_anon               | CREATE UNIQUE INDEX pk_cliente_anon ON public.cliente_anon USING btree (id_cliente)                                                | t      | t                     | t
+ public  | cliente_anon                 | uq_cliente_anon_email         | CREATE UNIQUE INDEX uq_cliente_anon_email ON public.cliente_anon USING btree (email)                                               | t      | t                     | t
+ public  | control_lote_almacen         | control_lote_almacen_pkey     | CREATE UNIQUE INDEX control_lote_almacen_pkey ON public.control_lote_almacen USING btree (lote_id, deposito_id)                    | t      | t                     | t
+ public  | control_lote_responsable     | control_lote_responsable_pkey | CREATE UNIQUE INDEX control_lote_responsable_pkey ON public.control_lote_responsable USING btree (lote_id, responsable_control_id) | t      | t                     | t
+ public  | deposito                     | deposito_pkey                 | CREATE UNIQUE INDEX deposito_pkey ON public.deposito USING btree (id)                                                              | t      | t                     | t
+ public  | detalle_pedido               | pk_detalle_pedido             | CREATE UNIQUE INDEX pk_detalle_pedido ON public.detalle_pedido USING btree (id_pedido, id_producto)                                | t      | t                     | t
+ public  | lote                         | lote_pkey                     | CREATE UNIQUE INDEX lote_pkey ON public.lote USING btree (id)                                                                      | t      | t                     | t
+ public  | mv_facturacion_categoria_mes | idx_mv_facturacion_uk         | CREATE UNIQUE INDEX idx_mv_facturacion_uk ON public.mv_facturacion_categoria_mes USING btree (anio, mes, id_categoria)             | t      | t                     | t
+ public  | pedido                       | pedido_pkey                   | CREATE UNIQUE INDEX pedido_pkey ON public.pedido USING btree (id_pedido)                                                           | t      | t                     | t
+ public  | producto                     | idx_producto_categoria_activo | CREATE INDEX idx_producto_categoria_activo ON public.producto USING btree (id_categoria, activo) WHERE (activo = true)             | t      | t                     | t
+ public  | producto                     | producto_nombre_key           | CREATE UNIQUE INDEX producto_nombre_key ON public.producto USING btree (nombre)                                                    | t      | t                     | t
+ public  | producto                     | producto_pkey                 | CREATE UNIQUE INDEX producto_pkey ON public.producto USING btree (id_producto)                                                     | t      | t                     | t
+ public  | responsable_control          | responsable_control_dni_key   | CREATE UNIQUE INDEX responsable_control_dni_key ON public.responsable_control USING btree (dni)                                    | t      | t                     | t
+ public  | responsable_control          | responsable_control_pkey      | CREATE UNIQUE INDEX responsable_control_pkey ON public.responsable_control USING btree (id)                                        | t      | t                     | t
+ public  | responsable_deposito         | responsable_deposito_pkey     | CREATE UNIQUE INDEX responsable_deposito_pkey ON public.responsable_deposito USING btree (responsable_control_id)                  | t      | t                     | t
+(19 rows)
+
+
+--- [7] CONTEO DE FILAS POR TABLA ---
+     tabla      | filas  
+----------------+--------
+ categoria      |      9
+ cliente        |  20000
+ detalle_pedido | 306700
+ pedido         | 203000
+ producto       |  50000
+(5 rows)
+
+
+--- [8] REGISTROS HU├ëRFANOS EN LAS RELACIONES DEL ESQUEMA ---
+                                          verificacion                                          | huerfanos 
+------------------------------------------------------------------------------------------------+-----------
+ control_lote_almacen.deposito_id -> deposito.id                                                |         0
+ control_lote_almacen.responsable_control_id -> responsable_control.id                          |         0
+ responsable_deposito.deposito_id -> deposito.id                                                |         0
+ responsable_deposito.responsable_control_id -> responsable_control.id                          |         0
+ control_lote_almacen.lote_id -> lote.id                                                        |         0
+ control_lote_responsable.lote_id -> lote.id                                                    |         0
+ control_lote_responsable.responsable_control_id -> responsable_deposito.responsable_control_id |         0
+ producto.id_categoria -> categoria.id_categoria                                                |         0
+ pedido.id_cliente -> cliente.id_cliente                                                        |         0
+ detalle_pedido.id_producto -> producto.id_producto                                             |         0
+ detalle_pedido.id_pedido -> pedido.id_pedido                                                   |         0
+(11 rows)
+
+
+--- [9] VIOLACIONES DE REGLAS DE NEGOCIO (deben ser 0) ---
+       violacion       | cantidad 
+-----------------------+----------
+ stock < 0             |        0
+ precio_lista < 0      |        0
+ cantidad detalle <= 0 |        0
+ precio_hist < 0       |        0
+(4 rows)
+
+
+--- [10] DUPLICADOS EN COLUMNAS UNIQUE (deben ser 0) ---
+          verificacion           | duplicados 
+---------------------------------+------------
+ nombres duplicados en categoria |          0
+ emails duplicados en cliente    |          0
+ nombres duplicados en producto  |          0
+(3 rows)
+
+
+--- [11] DISTRIBUCI├ôN DE FORMA DE PAGO EN PEDIDOS ---
+  forma_pago   | cantidad | porcentaje 
+---------------+----------+------------
+ TRANSFERENCIA |    68190 |      33.59
+ EFECTIVO      |    67518 |      33.26
+ TARJETA       |    67292 |      33.15
+(3 rows)
+
+
+--- [12] ESTADO DE VAC├ìO/ANALYZE (pg_stat_user_tables) ---
+            tabla             | filas_vivas | tuplas_muertas | last_vacuum |        last_autovacuum        |         last_analyze          |       last_autoanalyze        
+------------------------------+-------------+----------------+-------------+-------------------------------+-------------------------------+-------------------------------
+ categoria                    |           9 |              0 |             |                               |                               | 
+ cliente                      |       20000 |              6 |             | 2026-10-12 18:35:14.944711-03 | 2026-10-12 18:34:54.542462-03 | 
+ cliente_anon                 |       20000 |              0 |             | 2026-10-13 15:29:46.111143-03 |                               | 2026-10-13 15:29:46.492013-03
+ control_lote_almacen         |           8 |             15 |             |                               |                               | 
+ control_lote_responsable     |           3 |              0 |             |                               |                               | 
+ deposito                     |           7 |              0 |             |                               |                               | 
+ detalle_pedido               |      306700 |              0 |             | 2026-10-12 18:35:15.522754-03 | 2026-10-12 18:34:54.918219-03 | 
+ lote                         |           8 |              0 |             |                               |                               | 
+ mv_facturacion_categoria_mes |          36 |              0 |             |                               |                               | 
+ pedido                       |      203000 |              0 |             | 2026-10-12 18:35:15.181499-03 | 2026-10-12 18:34:54.869689-03 | 
+ producto                     |       50000 |              1 |             | 2026-10-12 18:35:14.882479-03 | 2026-10-12 18:34:54.13927-03  | 
+ responsable_control          |           7 |              0 |             |                               |                               | 
+ responsable_deposito         |           2 |              0 |             |                               |                               | 
+(13 rows)
+
+
+--- [13] SECUENCIAS IDENTITY (comparar ├║ltimo valor con ID m├íximo) ---
+      tabla       |   columna    |             secuencia             | id_maximo | ultimo_valor 
+------------------+--------------+-----------------------------------+-----------+--------------
+ public.cliente   | id_cliente   | public.cliente_id_cliente_seq     |     20000 |        20004
+ public.producto  | id_producto  | public.producto_id_producto_seq   |     50000 |        50000
+ public.categoria | id_categoria | public.categoria_id_categoria_seq |         9 |            9
+ public.pedido    | id_pedido    | public.pedido_id_pedido_seq       |    203000 |       203001
+(4 rows)
+
+
+--- [14] INVENTARIO DE OBJETOS (esquemas no internos) ---
+        tipo         |  esquema   |                             objeto                              |                                                                   detalle                                                                    
+---------------------+------------+-----------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------
+ EXTENSI├ôN           | pg_catalog | plpgsql                                                         | versi├│n=1.0
+ CHECK               | public     | deposito.chk_deposito_capacidad                                 | CHECK ((capacidad > 0))
+ CHECK               | public     | detalle_pedido.chk_detalle_cantidad                             | CHECK ((cantidad > 0))
+ CHECK               | public     | detalle_pedido.chk_detalle_precio                               | CHECK ((precio_unitario_historico >= (0)::numeric))
+ CHECK               | public     | lote.chk_lote_vencimiento                                       | CHECK ((fecha_vencimiento >= CURRENT_DATE))
+ CHECK               | public     | producto.chk_producto_precio                                    | CHECK ((precio_lista >= (0)::numeric))
+ CHECK               | public     | producto.chk_producto_stock                                     | CHECK ((stock >= 0))
+ CHECK               | public     | responsable_control.chk_responsable_mail                        | CHECK (((mail)::text ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$'::text))
+ COLUMNA             | public     | categoria.activo                                                | boolean, nullable=NO
+ COLUMNA             | public     | categoria.id_categoria                                          | bigint, nullable=NO
+ COLUMNA             | public     | categoria.nombre                                                | character varying, nullable=NO
+ COLUMNA             | public     | cliente.contrasena_hash                                         | text, nullable=YES
+ COLUMNA             | public     | cliente.direccion                                               | character varying, nullable=NO
+ COLUMNA             | public     | cliente.email                                                   | character varying, nullable=NO
+ COLUMNA             | public     | cliente.id_cliente                                              | bigint, nullable=NO
+ COLUMNA             | public     | cliente.nombre                                                  | character varying, nullable=NO
+ COLUMNA             | public     | cliente.telefono                                                | character varying, nullable=YES
+ COLUMNA             | public     | cliente_anon.contrasena_hash                                    | text, nullable=YES
+ COLUMNA             | public     | cliente_anon.direccion                                          | text, nullable=YES
+ COLUMNA             | public     | cliente_anon.email                                              | text, nullable=YES
+ COLUMNA             | public     | cliente_anon.id_cliente                                         | bigint, nullable=NO
+ COLUMNA             | public     | cliente_anon.nombre                                             | text, nullable=YES
+ COLUMNA             | public     | cliente_anon.telefono                                           | text, nullable=YES
+ COLUMNA             | public     | control_lote_almacen.deposito_id                                | bigint, nullable=NO
+ COLUMNA             | public     | control_lote_almacen.lote_id                                    | bigint, nullable=NO
+ COLUMNA             | public     | control_lote_almacen.responsable_control_id                     | bigint, nullable=NO
+ COLUMNA             | public     | control_lote_responsable.lote_id                                | bigint, nullable=NO
+ COLUMNA             | public     | control_lote_responsable.responsable_control_id                 | bigint, nullable=NO
+ COLUMNA             | public     | deposito.capacidad                                              | integer, nullable=NO
+ COLUMNA             | public     | deposito.id                                                     | bigint, nullable=NO
+ COLUMNA             | public     | deposito.nombre                                                 | character varying, nullable=NO
+ COLUMNA             | public     | deposito.ubicacion                                              | character varying, nullable=NO
+ COLUMNA             | public     | detalle_pedido.cantidad                                         | integer, nullable=NO
+ COLUMNA             | public     | detalle_pedido.id_pedido                                        | bigint, nullable=NO
+ COLUMNA             | public     | detalle_pedido.id_producto                                      | bigint, nullable=NO
+ COLUMNA             | public     | detalle_pedido.precio_unitario_historico                        | numeric, nullable=NO
+ COLUMNA             | public     | lote.codigo_producto                                            | character varying, nullable=NO
+ COLUMNA             | public     | lote.fecha_vencimiento                                          | date, nullable=NO
+ COLUMNA             | public     | lote.id                                                         | bigint, nullable=NO
+ COLUMNA             | public     | pedido.fecha_hora                                               | timestamp with time zone, nullable=NO
+ COLUMNA             | public     | pedido.forma_pago                                               | USER-DEFINED, nullable=NO
+ COLUMNA             | public     | pedido.id_cliente                                               | bigint, nullable=NO
+ COLUMNA             | public     | pedido.id_pedido                                                | bigint, nullable=NO
+ COLUMNA             | public     | producto.activo                                                 | boolean, nullable=NO
+ COLUMNA             | public     | producto.descripcion                                            | text, nullable=YES
+ COLUMNA             | public     | producto.id_categoria                                           | bigint, nullable=NO
+ COLUMNA             | public     | producto.id_producto                                            | bigint, nullable=NO
+ COLUMNA             | public     | producto.nombre                                                 | character varying, nullable=NO
+ COLUMNA             | public     | producto.precio_lista                                           | numeric, nullable=NO
+ COLUMNA             | public     | producto.stock                                                  | integer, nullable=NO
+ COLUMNA             | public     | responsable_control.dni                                         | character varying, nullable=NO
+ COLUMNA             | public     | responsable_control.id                                          | bigint, nullable=NO
+ COLUMNA             | public     | responsable_control.mail                                        | character varying, nullable=NO
+ COLUMNA             | public     | responsable_control.nombre_completo                             | character varying, nullable=NO
+ COLUMNA             | public     | responsable_deposito.deposito_id                                | bigint, nullable=NO
+ COLUMNA             | public     | responsable_deposito.responsable_control_id                     | bigint, nullable=NO
+ COLUMNA             | public     | vw_control_lote_almacen_compatibilidad.deposito_id              | bigint, nullable=YES
+ COLUMNA             | public     | vw_control_lote_almacen_compatibilidad.lote_id                  | bigint, nullable=YES
+ COLUMNA             | public     | vw_control_lote_almacen_compatibilidad.responsable_control_id   | bigint, nullable=YES
+ COLUMNA             | public     | vw_detalle_pedido_completo.cantidad                             | integer, nullable=YES
+ COLUMNA             | public     | vw_detalle_pedido_completo.id_pedido                            | bigint, nullable=YES
+ COLUMNA             | public     | vw_detalle_pedido_completo.id_producto                          | bigint, nullable=YES
+ COLUMNA             | public     | vw_detalle_pedido_completo.precio_unitario_historico            | numeric, nullable=YES
+ COLUMNA             | public     | vw_detalle_pedido_completo.producto_nombre                      | character varying, nullable=YES
+ COLUMNA             | public     | vw_detalle_pedido_completo.subtotal                             | numeric, nullable=YES
+ COLUMNA             | public     | vw_pedidos_cliente_segura.cliente_email                         | character varying, nullable=YES
+ COLUMNA             | public     | vw_pedidos_cliente_segura.cliente_nombre                        | character varying, nullable=YES
+ COLUMNA             | public     | vw_pedidos_cliente_segura.cliente_telefono                      | character varying, nullable=YES
+ COLUMNA             | public     | vw_pedidos_cliente_segura.fecha_hora                            | timestamp with time zone, nullable=YES
+ COLUMNA             | public     | vw_pedidos_cliente_segura.forma_pago                            | USER-DEFINED, nullable=YES
+ COLUMNA             | public     | vw_pedidos_cliente_segura.id_cliente                            | bigint, nullable=YES
+ COLUMNA             | public     | vw_pedidos_cliente_segura.id_pedido                             | bigint, nullable=YES
+ COLUMNA             | public     | vw_productos_vigentes.categoria_nombre                          | character varying, nullable=YES
+ COLUMNA             | public     | vw_productos_vigentes.id_categoria                              | bigint, nullable=YES
+ COLUMNA             | public     | vw_productos_vigentes.id_producto                               | bigint, nullable=YES
+ COLUMNA             | public     | vw_productos_vigentes.precio_lista                              | numeric, nullable=YES
+ COLUMNA             | public     | vw_productos_vigentes.producto_nombre                           | character varying, nullable=YES
+ COLUMNA             | public     | vw_productos_vigentes.stock                                     | integer, nullable=YES
+ ESQUEMA             | public     | public                                                          | 
+ EXTENSI├ôN           | public     | pgcrypto                                                        | versi├│n=1.3
+ FOREIGN KEY         | public     | control_lote_almacen.control_lote_almacen_deposito_id_fkey      | FOREIGN KEY (deposito_id) REFERENCES deposito(id)
+ FOREIGN KEY         | public     | control_lote_almacen.control_lote_almacen_lote_id_fkey          | FOREIGN KEY (lote_id) REFERENCES lote(id)
+ FOREIGN KEY         | public     | control_lote_almacen.control_lote_almacen_responsable_control_i | FOREIGN KEY (responsable_control_id) REFERENCES responsable_control(id)
+ FOREIGN KEY         | public     | control_lote_responsable.control_lote_responsable_lote_id_fkey  | FOREIGN KEY (lote_id) REFERENCES lote(id)
+ FOREIGN KEY         | public     | control_lote_responsable.control_lote_responsable_responsable_c | FOREIGN KEY (responsable_control_id) REFERENCES responsable_deposito(responsable_control_id)
+ FOREIGN KEY         | public     | detalle_pedido.fk_detalle_pedido                                | FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido) ON DELETE RESTRICT
+ FOREIGN KEY         | public     | detalle_pedido.fk_detalle_producto                              | FOREIGN KEY (id_producto) REFERENCES producto(id_producto) ON DELETE RESTRICT
+ FOREIGN KEY         | public     | pedido.fk_pedido_cliente                                        | FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE RESTRICT
+ FOREIGN KEY         | public     | producto.fk_producto_categoria                                  | FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria) ON DELETE RESTRICT
+ FOREIGN KEY         | public     | responsable_deposito.responsable_deposito_deposito_id_fkey      | FOREIGN KEY (deposito_id) REFERENCES deposito(id)
+ FOREIGN KEY         | public     | responsable_deposito.responsable_deposito_responsable_control_i | FOREIGN KEY (responsable_control_id) REFERENCES responsable_control(id)
+ FUNCI├ôN             | public     | armor(bytea)                                                    | text
+ FUNCI├ôN             | public     | armor(bytea, text[], text[])                                    | text
+ FUNCI├ôN             | public     | crypt(text, text)                                               | text
+ FUNCI├ôN             | public     | dearmor(text)                                                   | bytea
+ FUNCI├ôN             | public     | decrypt(bytea, bytea, text)                                     | bytea
+ FUNCI├ôN             | public     | decrypt_iv(bytea, bytea, bytea, text)                           | bytea
+ FUNCI├ôN             | public     | digest(bytea, text)                                             | bytea
+ FUNCI├ôN             | public     | digest(text, text)                                              | bytea
+ FUNCI├ôN             | public     | encrypt(bytea, bytea, text)                                     | bytea
+ FUNCI├ôN             | public     | encrypt_iv(bytea, bytea, bytea, text)                           | bytea
+ FUNCI├ôN             | public     | fn_autenticar(p_mail text, p_pass text)                         | bigint
+ FUNCI├ôN             | public     | fn_refrescar_top5_categorias()                                  | void
+ FUNCI├ôN             | public     | fn_resetear_password(p_cliente_id bigint, p_nueva text)         | void
+ FUNCI├ôN             | public     | fn_validar_fecha_pedido()                                       | trigger
+ FUNCI├ôN             | public     | fn_validar_producto_activo()                                    | trigger
+ FUNCI├ôN             | public     | gen_random_bytes(integer)                                       | bytea
+ FUNCI├ôN             | public     | gen_random_uuid()                                               | uuid
+ FUNCI├ôN             | public     | gen_salt(text)                                                  | text
+ FUNCI├ôN             | public     | gen_salt(text, integer)                                         | text
+ FUNCI├ôN             | public     | hmac(bytea, bytea, text)                                        | bytea
+ FUNCI├ôN             | public     | hmac(text, text, text)                                          | bytea
+ FUNCI├ôN             | public     | pgp_armor_headers(text, OUT key text, OUT value text)           | SETOF record
+ FUNCI├ôN             | public     | pgp_key_id(bytea)                                               | text
+ FUNCI├ôN             | public     | pgp_pub_decrypt(bytea, bytea)                                   | text
+ FUNCI├ôN             | public     | pgp_pub_decrypt(bytea, bytea, text)                             | text
+ FUNCI├ôN             | public     | pgp_pub_decrypt(bytea, bytea, text, text)                       | text
+ FUNCI├ôN             | public     | pgp_pub_decrypt_bytea(bytea, bytea)                             | bytea
+ FUNCI├ôN             | public     | pgp_pub_decrypt_bytea(bytea, bytea, text)                       | bytea
+ FUNCI├ôN             | public     | pgp_pub_decrypt_bytea(bytea, bytea, text, text)                 | bytea
+ FUNCI├ôN             | public     | pgp_pub_encrypt(text, bytea)                                    | bytea
+ FUNCI├ôN             | public     | pgp_pub_encrypt(text, bytea, text)                              | bytea
+ FUNCI├ôN             | public     | pgp_pub_encrypt_bytea(bytea, bytea)                             | bytea
+ FUNCI├ôN             | public     | pgp_pub_encrypt_bytea(bytea, bytea, text)                       | bytea
+ FUNCI├ôN             | public     | pgp_sym_decrypt(bytea, text)                                    | text
+ FUNCI├ôN             | public     | pgp_sym_decrypt(bytea, text, text)                              | text
+ FUNCI├ôN             | public     | pgp_sym_decrypt_bytea(bytea, text)                              | bytea
+ FUNCI├ôN             | public     | pgp_sym_decrypt_bytea(bytea, text, text)                        | bytea
+ FUNCI├ôN             | public     | pgp_sym_encrypt(text, text)                                     | bytea
+ FUNCI├ôN             | public     | pgp_sym_encrypt(text, text, text)                               | bytea
+ FUNCI├ôN             | public     | pgp_sym_encrypt_bytea(bytea, text)                              | bytea
+ FUNCI├ôN             | public     | pgp_sym_encrypt_bytea(bytea, text, text)                        | bytea
+ ├ìNDICE              | public     | categoria_nombre_key                                            | 
+ ├ìNDICE              | public     | categoria_pkey                                                  | 
+ ├ìNDICE              | public     | cliente_email_key                                               | 
+ ├ìNDICE              | public     | cliente_pkey                                                    | 
+ ├ìNDICE              | public     | control_lote_almacen_pkey                                       | 
+ ├ìNDICE              | public     | control_lote_responsable_pkey                                   | 
+ ├ìNDICE              | public     | deposito_pkey                                                   | 
+ ├ìNDICE              | public     | idx_mv_facturacion_uk                                           | 
+ ├ìNDICE              | public     | idx_producto_categoria_activo                                   | 
+ ├ìNDICE              | public     | lote_pkey                                                       | 
+ ├ìNDICE              | public     | pedido_pkey                                                     | 
+ ├ìNDICE              | public     | pk_cliente_anon                                                 | 
+ ├ìNDICE              | public     | pk_detalle_pedido                                               | 
+ ├ìNDICE              | public     | producto_nombre_key                                             | 
+ ├ìNDICE              | public     | producto_pkey                                                   | 
+ ├ìNDICE              | public     | responsable_control_dni_key                                     | 
+ ├ìNDICE              | public     | responsable_control_pkey                                        | 
+ ├ìNDICE              | public     | responsable_deposito_pkey                                       | 
+ ├ìNDICE              | public     | uq_cliente_anon_email                                           | 
+ PRIMARY KEY         | public     | categoria.categoria_pkey                                        | PRIMARY KEY (id_categoria)
+ PRIMARY KEY         | public     | cliente.cliente_pkey                                            | PRIMARY KEY (id_cliente)
+ PRIMARY KEY         | public     | cliente_anon.pk_cliente_anon                                    | PRIMARY KEY (id_cliente)
+ PRIMARY KEY         | public     | control_lote_almacen.control_lote_almacen_pkey                  | PRIMARY KEY (lote_id, deposito_id)
+ PRIMARY KEY         | public     | control_lote_responsable.control_lote_responsable_pkey          | PRIMARY KEY (lote_id, responsable_control_id)
+ PRIMARY KEY         | public     | deposito.deposito_pkey                                          | PRIMARY KEY (id)
+ PRIMARY KEY         | public     | detalle_pedido.pk_detalle_pedido                                | PRIMARY KEY (id_pedido, id_producto)
+ PRIMARY KEY         | public     | lote.lote_pkey                                                  | PRIMARY KEY (id)
+ PRIMARY KEY         | public     | pedido.pedido_pkey                                              | PRIMARY KEY (id_pedido)
+ PRIMARY KEY         | public     | producto.producto_pkey                                          | PRIMARY KEY (id_producto)
+ PRIMARY KEY         | public     | responsable_control.responsable_control_pkey                    | PRIMARY KEY (id)
+ PRIMARY KEY         | public     | responsable_deposito.responsable_deposito_pkey                  | PRIMARY KEY (responsable_control_id)
+ PROCEDIMIENTO       | public     | sp_crear_pedido(IN p_id_cliente bigint, IN p_forma_pago forma_p | 
+ SECUENCIA           | public     | categoria_id_categoria_seq                                      | 
+ SECUENCIA           | public     | cliente_id_cliente_seq                                          | 
+ SECUENCIA           | public     | pedido_id_pedido_seq                                            | 
+ SECUENCIA           | public     | producto_id_producto_seq                                        | 
+ TABLA               | public     | categoria                                                       | 
+ TABLA               | public     | cliente                                                         | 
+ TABLA               | public     | cliente_anon                                                    | 
+ TABLA               | public     | control_lote_almacen                                            | 
+ TABLA               | public     | control_lote_responsable                                        | 
+ TABLA               | public     | deposito                                                        | 
+ TABLA               | public     | detalle_pedido                                                  | 
+ TABLA               | public     | lote                                                            | 
+ TABLA               | public     | pedido                                                          | 
+ TABLA               | public     | producto                                                        | 
+ TABLA               | public     | responsable_control                                             | 
+ TABLA               | public     | responsable_deposito                                            | 
+ TIPO                | public     | categoria                                                       | TIPO COMPUESTO
+ TIPO                | public     | cliente                                                         | TIPO COMPUESTO
+ TIPO                | public     | cliente_anon                                                    | TIPO COMPUESTO
+ TIPO                | public     | codigo_producto_dom                                             | DOMINIO
+ TIPO                | public     | control_lote_almacen                                            | TIPO COMPUESTO
+ TIPO                | public     | control_lote_responsable                                        | TIPO COMPUESTO
+ TIPO                | public     | deposito                                                        | TIPO COMPUESTO
+ TIPO                | public     | detalle_pedido                                                  | TIPO COMPUESTO
+ TIPO                | public     | dni_arg_dom                                                     | DOMINIO
+ TIPO                | public     | forma_pago_enum                                                 | ENUM
+ TIPO                | public     | lote                                                            | TIPO COMPUESTO
+ TIPO                | public     | mv_facturacion_categoria_mes                                    | TIPO COMPUESTO
+ TIPO                | public     | pedido                                                          | TIPO COMPUESTO
+ TIPO                | public     | producto                                                        | TIPO COMPUESTO
+ TIPO                | public     | responsable_control                                             | TIPO COMPUESTO
+ TIPO                | public     | responsable_deposito                                            | TIPO COMPUESTO
+ TIPO                | public     | vw_control_lote_almacen_compatibilidad                          | TIPO COMPUESTO
+ TIPO                | public     | vw_detalle_pedido_completo                                      | TIPO COMPUESTO
+ TIPO                | public     | vw_pedidos_cliente_segura                                       | TIPO COMPUESTO
+ TIPO                | public     | vw_productos_vigentes                                           | TIPO COMPUESTO
+ TRIGGER             | public     | detalle_pedido.trg_validar_producto_activo                      | CREATE TRIGGER trg_validar_producto_activo BEFORE INSERT ON public.detalle_pedido FOR EACH ROW EXECUTE FUNCTION fn_validar_producto_activo()
+ TRIGGER             | public     | pedido.trg_validar_fecha_pedido                                 | CREATE TRIGGER trg_validar_fecha_pedido BEFORE INSERT OR UPDATE ON public.pedido FOR EACH ROW EXECUTE FUNCTION fn_validar_fecha_pedido()
+ UNIQUE              | public     | categoria.categoria_nombre_key                                  | UNIQUE (nombre)
+ UNIQUE              | public     | cliente.cliente_email_key                                       | UNIQUE (email)
+ UNIQUE              | public     | cliente_anon.uq_cliente_anon_email                              | UNIQUE (email)
+ UNIQUE              | public     | producto.producto_nombre_key                                    | UNIQUE (nombre)
+ UNIQUE              | public     | responsable_control.responsable_control_dni_key                 | UNIQUE (dni)
+ VISTA               | public     | vw_control_lote_almacen_compatibilidad                          | 
+ VISTA               | public     | vw_detalle_pedido_completo                                      | 
+ VISTA               | public     | vw_pedidos_cliente_segura                                       | 
+ VISTA               | public     | vw_productos_vigentes                                           | 
+ VISTA MATERIALIZADA | public     | mv_facturacion_categoria_mes                                    | poblada=true
+(212 rows)
+
+
+--- [15] TAMA├æO DE LA BASE DE DATOS ---
+     base      | tamanio_total 
+---------------+---------------
+ foodstore_dev | 75 MB
+(1 row)
+
+
+--- [15b] TAMA├æO POR TABLA (total = tabla + ├¡ndices) ---
+          tabla           | solo_tabla | con_indices 
+--------------------------+------------+-------------
+ detalle_pedido           | 18 MB      | 29 MB
+ pedido                   | 12 MB      | 16 MB
+ producto                 | 6560 kB    | 11 MB
+ cliente                  | 3000 kB    | 5760 kB
+ cliente_anon             | 2280 kB    | 3584 kB
+ responsable_control      | 8192 bytes | 48 kB
+ categoria                | 8192 bytes | 40 kB
+ lote                     | 8192 bytes | 32 kB
+ control_lote_responsable | 8192 bytes | 24 kB
+ deposito                 | 8192 bytes | 24 kB
+ control_lote_almacen     | 8192 bytes | 24 kB
+ responsable_deposito     | 8192 bytes | 24 kB
+(12 rows)
+
+
+============================================================
+FIN DEL CHEQUEO PRE-TRABAJO
+Revisar todo resultado fuera del valor esperado antes de continuar.
+Hu├®rfanos, violaciones de reglas y duplicados inesperados: deben ser 0.
+FKs no validadas, ├¡ndices no v├ílidos y secuencias atrasadas: investigar.
+Tuplas muertas, filas, tama├▒os y distribuciones: valores informativos;
+un valor positivo no implica por s├¡ solo un error.
+============================================================

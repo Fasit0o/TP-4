@@ -1,0 +1,55 @@
+LOG TRANSFERENCIA DE PROPIEDAD — FOOD STORE | U6
+Base     : foodstore_dev
+Ejecutado: postgres (superusuario técnico)
+Objetivo : admin_datos (NOSUPERUSER)
+Script   : food_store_tp_u6/scripts/setup_ownership.sql
+Resultado: OK (psql exit code 0; transacción confirmada)
+========================================================================
+
+Fragmento de ejecución:
+
+BEGIN;
+SET LOCAL search_path = pg_catalog;
+DO $preconditions$
+    (...)
+$preconditions$;
+DO $transfer$
+    (...)
+$transfer$;
+ALTER DATABASE foodstore_dev OWNER TO admin_datos;
+DO $verify$
+    (...)
+$verify$;
+COMMIT;
+
+La transacción y las verificaciones terminaron sin errores.
+El script completo y reproducible se conserva en:
+food_store_tp_u6/scripts/setup_ownership.sql
+
+--- Propietario de la base y esquema public ---
+    datname    | propietario_base | propietario_esquema
+---------------+------------------+--------------------
+ foodstore_dev | admin_datos      | admin_datos
+(1 fila)
+
+--- Rutinas de aplicación ---
+                    rutina                     | propietario
+-----------------------------------------------+------------
+ fn_autenticar(text,text)                      | admin_datos
+ fn_refrescar_top5_categorias()                | admin_datos
+ fn_resetear_password(bigint,text)             | admin_datos
+ fn_validar_fecha_pedido()                     | admin_datos
+ fn_validar_producto_activo()                  | admin_datos
+ sp_crear_pedido(bigint,forma_pago_enum,jsonb) | admin_datos
+(6 filas)
+
+--- Tipos definidos por la aplicación ---
+ esquema |        tipo         | propietario
+---------+---------------------+------------
+ public  | codigo_producto_dom | admin_datos
+ public  | dni_arg_dom         | admin_datos
+ public  | forma_pago_enum     | admin_datos
+(3 filas)
+
+Extensiones técnicas pgcrypto y plpgsql y sus objetos miembro excluidos.
+admin_datos permanece NOSUPERUSER.
